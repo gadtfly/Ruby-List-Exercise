@@ -5,7 +5,7 @@ class Cons
   attr_accessor :cdr
 
   def self.list(array)
-    self.new(array.shift, self.list(array)) unless array.empty?
+    array.empty? ? EmptyCons.new : self.new(array.shift, self.list(array))
   end
 
   def initialize(car, cdr)
@@ -21,12 +21,33 @@ class Cons
   end
 
   def size
-    self.cdr ? 1 + cdr.size : 1
+    1 + cdr.size
   end
 
   def remove_all(x)
-    cdr = self.cdr ? self.cdr.remove_all(x) : nil
-    self.car == x ? cdr : Cons.new(self.car, cdr)
+    if self.car == x
+      self.cdr.remove_all(x)
+    else
+      Cons.new(self.car, self.cdr.remove_all(x))
+    end
+  end
+end
+
+class EmptyCons
+  def ==(other)
+    EmptyCons === other
+  end
+
+  def to_a
+    []
+  end
+
+  def size
+    0
+  end
+
+  def remove_all(x)
+    self
   end
 end
 
@@ -34,7 +55,7 @@ end
 
 RSpec.describe Cons do
   describe '::list' do
-    it { expect(Cons.list([1,2,3])).to eq(Cons.new(1, Cons.new(2, Cons.new(3, nil)))) }
+    it { expect(Cons.list([1,2,3])).to eq(Cons.new(1, Cons.new(2, Cons.new(3, EmptyCons.new)))) }
   end
 
   describe '#==' do
