@@ -1,45 +1,57 @@
-class Node
-  attr_accessor :item
-  attr_accessor :rest
+require 'rspec/autorun'
 
-  def initialize(obj)
-    self.item = obj
+class Cons
+  attr_accessor :car
+  attr_accessor :cdr
+
+  def self.list(array)
+    self.new(array.shift, self.list(array)) unless array.empty?
   end
 
-  def cons(obj)
-    node = Node.new(obj)
-    node.rest = self
-    node
+  def initialize(car, cdr)
+    self.car, self.cdr = car, cdr
+  end
+
+  def ==(other)
+    self.car == other.car && self.cdr == other.cdr
+  end
+
+  def to_a
+    [self.car] + self.cdr.to_a
   end
 
   def size
-    if self.rest
-      1 + self.rest.size
-    else
-      1
-    end
+    self.cdr ? 1 + cdr.size : 1
   end
 
-  def dump
-    puts self.item
-    if self.rest
-      self.rest.dump
-    end
-  end
-
-  def removeAllWithValue(obj)
-    if self.item == obj
-      self.rest.removeAllWithValue(obj)
-    else
-      node = Node.new(self.item)
-      node.rest = self.rest.removeAllWithValue(obj)
-    end
+  def remove_all(x)
+    cdr = self.cdr ? self.cdr.remove_all(x) : nil
+    self.car == x ? cdr : Cons.new(self.car, cdr)
   end
 end
 
 
-list = Node.new(1).cons(2).cons(2).cons(3)
-# p list.size
-# list.dump
-list = list.removeAllWithValue(2)
-list.dump
+
+RSpec.describe Cons do
+  describe '::list' do
+    it { expect(Cons.list([1,2,3])).to eq(Cons.new(1, Cons.new(2, Cons.new(3, nil)))) }
+  end
+
+  describe '#==' do
+    it { expect(Cons.list([1,2,3])).to eq Cons.list([1,2,3])}
+  end
+
+  describe '#to_a' do
+    it { expect(Cons.list([1,2,3]).to_a).to eq([1,2,3]) }
+  end
+
+  describe '#size' do
+    it { expect(Cons.list([1,2,3]).size).to eq(3) }
+  end
+
+  describe '#remove_all' do
+    it { expect(Cons.list([1,2,2,3]).remove_all(1).to_a).to eq([2,2,3]) }
+    it { expect(Cons.list([1,2,2,3]).remove_all(2).to_a).to eq([1,3]) }
+    it { expect(Cons.list([1,2,2,3]).remove_all(3).to_a).to eq([1,2,2]) }
+  end
+end
